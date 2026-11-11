@@ -1,32 +1,24 @@
-import { useState } from 'react';
+import { useEditableTitle } from '../../hooks/useEditableTitle.jsx';
 import { isValidTodoTitle } from '../../utils/todoValidation.js';
 import TextInputWithLabel from '../../shared/TextInputWithLabel.jsx';
 
 function TodoListItem ({todo, onCompleteTodo, onUpdateTodo}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [workingTitle, setWorkingTitle] = useState(todo.title);
-
-  function handleCancel() {
-    setIsEditing(false);
-    setWorkingTitle(todo.title);
-  }
-
-  function handleEdit(event) {
-    setWorkingTitle(event.target.value);
-  }
+  const {
+    isEditing,
+    workingTitle,
+    startEditing,
+    cancelEdit,
+    updateTitle,
+    finishEdit,
+  } = useEditableTitle(todo.title);
 
   function handleUpdate(event) {
     if (!isEditing) {
       return false;
     }
-    
     event.preventDefault();
-    onUpdateTodo({
-      id: todo.id,
-      title: workingTitle,
-      isCompleted: todo.isCompleted,
-    });
-    setIsEditing(false);
+    const finalTitle = finishEdit();
+    onUpdateTodo({...todo, title: finalTitle});
   }
 
   return (
@@ -36,11 +28,11 @@ function TodoListItem ({todo, onCompleteTodo, onUpdateTodo}) {
           <>
             <TextInputWithLabel 
               value={workingTitle} 
-              onChange={(event) => handleEdit(event)}
+              onChange={(event) => updateTitle(event.target.value)}
             />
             <button
               type="button"
-              onClick={() => handleCancel()}
+              onClick={() => cancelEdit()}
             >
               Cancel
             </button>
@@ -59,7 +51,7 @@ function TodoListItem ({todo, onCompleteTodo, onUpdateTodo}) {
                 checked={todo.isCompleted}
                 onChange={() => onCompleteTodo(todo.id)}
               />
-              <span onClick={() => setIsEditing(true)}>{todo.title}</span>
+              <span onClick={() => startEditing()}>{todo.title}</span>
             </>
           )}
       </form>
