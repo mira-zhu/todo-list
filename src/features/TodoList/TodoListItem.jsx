@@ -23,7 +23,7 @@ function TodoListItem ({todo, onCompleteTodo, onUpdateTodo}) {
 
   return (
     <li>
-      <form>
+      <form onSubmit={(event) => handleUpdate(event)}>
         { isEditing ? (
           <>
             <TextInputWithLabel 
