@@ -162,7 +162,7 @@ function TodosPage({ token }) {
           <p>Error: {error}</p> 
           <button
             type="button"
-            onClick={() => setError(false)}
+            onClick={() => setError("")}
           >
             Clear Error
           </button>
