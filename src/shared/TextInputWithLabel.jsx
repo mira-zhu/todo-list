@@ -3,7 +3,8 @@ function TextInputWithLabel ({
   labelText,
   onChange,
   ref,
-  value
+  value,
+  isRequired="false",
 }) {
   return (
     <>
@@ -14,6 +15,7 @@ function TextInputWithLabel ({
           ref={ref}
           value={value}
           onChange={onChange}
+          required={isRequired}
       >
       </input>
     </>
