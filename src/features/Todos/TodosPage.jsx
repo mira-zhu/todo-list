@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useDebounce } from '../../hooks/useDebounce.jsx';
 import TodoList from './TodoList/TodoList.jsx';
 import TodoForm from './TodoForm.jsx';
+import FilterInput from '../../shared/FilterInput.jsx';
 import SortBy from '../../shared/SortBy.jsx';
+
   
 function TodosPage({ token }) {
   const [todoList, setTodoList] = useState([]);
@@ -9,16 +12,23 @@ function TodosPage({ token }) {
   const [isTodoListLoading, setIsTodoListLoading] = useState(false);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [filterTerm, setFilterTerm] = useState("");
+  const debouncedFilterTerm = useDebounce(filterTerm, 300);
  
   useEffect(() => {
     async function fetchTodos(token) {
       setIsTodoListLoading(true);
       try {
-        const params = new URLSearchParams({
+        const paramsObject = {
           sortBy,
           sortDirection,
           limit: 100,
-        });
+        };
+        if (debouncedFilterTerm) {
+          paramsObject.find = debouncedFilterTerm;
+        }
+        const params = new URLSearchParams(paramsObject);
+
         const response = await fetch(`/api/tasks?${params}`, {
           headers: {
             "X-CSRF-TOKEN": token,
@@ -46,7 +56,7 @@ function TodosPage({ token }) {
       fetchTodos(token);
     }
     
-  }, [token, sortBy, sortDirection]);
+  }, [token, sortBy, sortDirection, debouncedFilterTerm]);
 
   async function addTodo(todoTitle) {
     const newTodo = {
@@ -159,6 +169,10 @@ function TodosPage({ token }) {
     }
   }
 
+  function handleFilterChange(newTerm) {
+    setFilterTerm(newTerm);
+  }
+
   return (
     <div>
       { isTodoListLoading && <p>Loading...</p> }
@@ -179,6 +193,7 @@ function TodosPage({ token }) {
         onSortByChange={setSortBy}
         onSortDirectionChange={setSortDirection}
       />
+      <FilterInput filterTerm={filterTerm} onFilterChange={handleFilterChange}/>
       <TodoForm onAddTodo={addTodo} />
       <TodoList 
         todoList={todoList}
