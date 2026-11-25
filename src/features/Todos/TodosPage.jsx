@@ -15,13 +15,13 @@ function TodosPage({ token }) {
   const [sortDirection, setSortDirection] = useState("desc");
   const [filterTerm, setFilterTerm] = useState("");
   const debouncedFilterTerm = useDebounce(filterTerm, 300);
+  const [filterError, setFilterError] = useState("");
 
   function handleFilterChange(newTerm) {
     setFilterTerm(newTerm);
   }
 
   const invalidateCache = useCallback(() => {
-    console.log("Invalidating memo cache after todo mutation");
     setDataVersion(prev => prev + 1);
   }, []);
  
@@ -50,13 +50,18 @@ function TodosPage({ token }) {
 
         if (response.status === 200) {
           setTodoList(data.tasks);
+          setFilterError("");
         } else if (response.status === 401) {
           setError(`401 Unauthorized: ${data?.message}`);
         } else {
           setError(`Error: ${data?.message}`);
         }
       } catch(error) {
-        setError(`Error: ${error.name} | ${error.message}`);
+        if (debouncedFilterTerm || sortBy !== 'createdAt' || sortDirection !== 'desc') {
+          setFilterError(`Error filtering/sorting todos: ${error.message}`);
+        } else {
+          setError(`Error: ${error.name} | ${error.message}`);
+        }
       } finally {
         setIsTodoListLoading(false);
       }
@@ -187,12 +192,34 @@ function TodosPage({ token }) {
       { isTodoListLoading && <p>Loading...</p> }
       { error && 
         <div>
-          <p>Error: {error}</p> 
+          <p>{error}</p> 
           <button
             type="button"
             onClick={() => setError("")}
           >
             Clear Error
+          </button>
+        </div>
+      }
+      { filterError && 
+        <div>
+          <p>{filterError}</p> 
+          <button
+            type="button"
+            onClick={() => setFilterError("")}
+          >
+            Clear Error
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSortBy("createdAt");
+              setSortDirection("desc")
+              setFilterTerm("");
+              setFilterError("");
+            }}
+          >
+            Reset Filters
           </button>
         </div>
       }
