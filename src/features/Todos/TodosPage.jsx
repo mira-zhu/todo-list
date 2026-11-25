@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDebounce } from '../../hooks/useDebounce.jsx';
 import TodoList from './TodoList/TodoList.jsx';
 import TodoForm from './TodoForm.jsx';
@@ -10,10 +10,20 @@ function TodosPage({ token }) {
   const [todoList, setTodoList] = useState([]);
   const [error, setError] = useState("");
   const [isTodoListLoading, setIsTodoListLoading] = useState(false);
+  const [dataVersion, setDataVersion] = useState(0);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
   const [filterTerm, setFilterTerm] = useState("");
   const debouncedFilterTerm = useDebounce(filterTerm, 300);
+
+  function handleFilterChange(newTerm) {
+    setFilterTerm(newTerm);
+  }
+
+  const invalidateCache = useCallback(() => {
+    console.log("Invalidating memo cache after todo mutation");
+    setDataVersion(prev => prev + 1);
+  }, []);
  
   useEffect(() => {
     async function fetchTodos(token) {
@@ -84,8 +94,9 @@ function TodosPage({ token }) {
       const serverTodo = await response.json();
 
       setTodoList(previous => previous.map(todo => (
-        (todo.title === serverTodo.title && todo.isCompleted === serverTodo.isCompleted) ? serverTodo : todo
+        todo.id === newTodo.id ? serverTodo : todo
       )));
+      invalidateCache();
 
     } catch(error) {
       setError(`Failed to add todo: ${error.message}`);
@@ -120,6 +131,7 @@ function TodosPage({ token }) {
           setTodoList(previous => previous.map(todo => (
             todo.id === serverTodo.id ? serverTodo : todo
           )));
+          invalidateCache();
 
         } catch(error) {
           setError(`Failed to mark todo as completed. ${error.message}`);
@@ -158,6 +170,7 @@ function TodosPage({ token }) {
           setTodoList(previous => previous.map(todo => (
             todo.id === serverTodo.id ? serverTodo : todo
           )));
+          invalidateCache();
 
         } catch(error) {
           setError(`Failed to upload edited todo. ${error.message}`);
@@ -167,10 +180,6 @@ function TodosPage({ token }) {
         }
       }
     }
-  }
-
-  function handleFilterChange(newTerm) {
-    setFilterTerm(newTerm);
   }
 
   return (
@@ -199,6 +208,7 @@ function TodosPage({ token }) {
         todoList={todoList}
         onCompleteTodo={completeTodo}
         onUpdateTodo={updateTodo}
+        dataVersion={dataVersion}
       />
     </div>
   )
