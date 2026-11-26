@@ -42,14 +42,14 @@ function Logon({ onSetEmail, onSetToken }) {
         labelText="Email"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
-        isRequired="true"
+        isRequired={true}
       />
       <TextInputWithLabel
         elementId="password"
         labelText="Password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
-        isRequired="true"
+        isRequired={true}
       />
       <button 
         type="submit"

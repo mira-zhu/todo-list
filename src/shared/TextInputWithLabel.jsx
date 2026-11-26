@@ -4,7 +4,7 @@ function TextInputWithLabel ({
   onChange,
   ref,
   value,
-  isRequired="false",
+  isRequired=false,
 }) {
   return (
     <>
